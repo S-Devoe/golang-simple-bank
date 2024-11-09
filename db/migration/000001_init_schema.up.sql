@@ -8,16 +8,16 @@ CREATE TABLE "accounts" (
 
 CREATE TABLE "entries" (
   "id" bigserial PRIMARY KEY,
-  "account_id" bigint,
-  "amount" bigint NOT NULL,
+  "account_id" bigint NOT NULL,
+  "amount" float NOT NULL,
   "created_at" timestamp NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "transfer" (
   "id" bigserial PRIMARY KEY,
-  "from_account_id" bigint,
-  "to_account_id" bigint,
-  "amount" bigint NOT NULL,
+  "from_account_id" bigint NOT NULL,
+  "to_account_id" bigint NOT NULL,
+  "amount" float NOT NULL,
   "created_at" timestamp NOT NULL DEFAULT (now())
 );
 
