@@ -23,6 +23,13 @@ func GenerateRandomName() string {
 	return fmt.Sprintf("%s %s", firstName, lastName)
 
 }
+func GenerateRandomUserName() string {
+
+	username := firstNames[rand.Intn(len(firstNames))]
+
+	return username
+
+}
 
 // Function to generate random integer between min and max
 func GenerateRandomInt(min, max int64) int64 {
@@ -52,4 +59,9 @@ func GenerateRandomCurrency() string {
 	currencies := []string{"USD", "NGN", "EUR", "GBP"}
 
 	return currencies[rand.Intn(len(currencies))]
+}
+
+func GenerateRandomEmail() string {
+
+	return GenerateRandomString(8) + "@example.com"
 }
