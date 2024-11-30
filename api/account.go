@@ -2,11 +2,13 @@ package api
 
 import (
 	"database/sql"
+	"log"
 	"net/http"
 
 	db "github.com/S-Devoe/golang-simple-bank/db/sqlc"
 	"github.com/S-Devoe/golang-simple-bank/util"
 	"github.com/gin-gonic/gin"
+	"github.com/lib/pq"
 )
 
 // create account
@@ -18,7 +20,8 @@ type createAccountRequest struct {
 func (server *Server) createAccount(ctx *gin.Context) {
 	var req createAccountRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		// ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, util.CreateResponse(http.StatusBadRequest, nil, err))
 		return
 	}
 	arg := db.CreateAccountParams{
@@ -28,6 +31,14 @@ func (server *Server) createAccount(ctx *gin.Context) {
 	}
 	account, err := server.store.CreateAccount(ctx, arg)
 	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			log.Println(pqErr.Code.Name())
+			switch pqErr.Code.Name() {
+			case "foreign_key_violation", "unique_violation":
+				ctx.JSON(http.StatusForbidden, util.CreateResponse(http.StatusForbidden, nil, pqErr))
+				return
+			}
+		}
 		ctx.JSON(http.StatusInternalServerError, util.CreateResponse(http.StatusInternalServerError, nil, err))
 		return
 	}
