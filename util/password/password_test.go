@@ -28,4 +28,14 @@ func TestPassword(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, matchedWrongPassword)
 
+	// test to check if an error will occur if two users use the same password
+	hashedPassword2, err := GeneratePasswordHash(password)
+	require.NoError(t, err)
+	require.NotEmpty(t, hashedPassword2)
+	require.NotEqual(t, hashedPassword, hashedPassword2)
+
+	matchedPassword2, err := ComparePasswordAndHash(password, hashedPassword2)
+	require.NoError(t, err)
+	require.True(t, matchedPassword2)
+
 }

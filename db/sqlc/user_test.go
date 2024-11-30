@@ -5,14 +5,19 @@ import (
 	"testing"
 
 	"github.com/S-Devoe/golang-simple-bank/util"
+	"github.com/S-Devoe/golang-simple-bank/util/password"
 	"github.com/stretchr/testify/require"
 )
 
 func TestCreateUser(t *testing.T) {
+	user_password := util.GenerateRandomString(8)
+	hashedPassword, err := password.GeneratePasswordHash(user_password)
+	require.NoError(t, err)
+
 	arg := CreateUserParams{
 		Username:       util.GenerateRandomString(8),
 		FullName:       util.GenerateRandomName(),
-		HashedPassword: util.GenerateRandomString(8),
+		HashedPassword: hashedPassword,
 		Email:          util.GenerateRandomEmail(),
 	}
 
