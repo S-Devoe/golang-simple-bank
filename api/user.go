@@ -77,7 +77,7 @@ func (s *Server) createUser(ctx *gin.Context) {
 }
 
 type getUserRequest struct {
-	Username string `uri:"username" binding:"required"`
+	Username string `uri:"username" binding:"required,min=3"`
 }
 
 func (s *Server) getUser(ctx *gin.Context) {
