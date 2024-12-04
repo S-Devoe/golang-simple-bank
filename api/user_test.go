@@ -244,7 +244,6 @@ func requireCreateUserBodyMatch(t *testing.T, body *bytes.Buffer, user db.User) 
 	require.WithinDuration(t, user.PasswordChangedAt, response.Data.PasswordChanged, time.Second)
 
 }
-
 func requireGetUserBodyMatch(t *testing.T, body *bytes.Buffer, user db.User) {
 	data, err := io.ReadAll(body)
 	require.NoError(t, err)
