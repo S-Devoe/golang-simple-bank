@@ -53,16 +53,6 @@ func TestGetUserAPI(t *testing.T) {
 			},
 		},
 		{
-			name:     "BAD_REQUEST",
-			username: "i",
-			buildStubs: func(store *mockdb.MockStore) {
-
-			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
-			},
-		},
-		{
 			name:     "INTERNAL_ERROR",
 			username: user.Username,
 			buildStubs: func(store *mockdb.MockStore) {
