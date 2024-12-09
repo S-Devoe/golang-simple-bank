@@ -1,7 +1,11 @@
 package api
 
 import (
+	"fmt"
+
+	"github.com/S-Devoe/golang-simple-bank/config"
 	db "github.com/S-Devoe/golang-simple-bank/db/sqlc"
+	"github.com/S-Devoe/golang-simple-bank/token"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
@@ -9,38 +13,51 @@ import (
 
 // server struct will serve all requests for the banking service
 type Server struct {
-	store  db.Store
-	router *gin.Engine
+	store      db.Store
+	router     *gin.Engine
+	tokenMaker token.Maker
+	config     config.Config
 }
 
 // Newserver creates a new http server and setup routing
-func NewServer(store db.Store) *Server {
-	server := &Server{
-		store: store,
+func NewServer(config config.Config, store db.Store) (*Server, error) {
+	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create token maker: %w", err)
 	}
-	router := gin.Default()
+	server := &Server{
+		store:      store,
+		tokenMaker: tokenMaker,
+		config:     config,
+	}
+
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("currency", validCurrency)
 	}
-	// accounts endpoint
-	router.POST("/accounts", server.createAccount)
-	router.GET("/accounts/:id", server.getAccount)
-	router.GET("/accounts", server.listAccounts)
-	// transfers endpoints
-	router.POST("/transfers", server.createTransfer)
-	// users endpoints
-	router.POST("/users", server.createUser)
-	router.GET("/users/:username", server.getUser)
-	router.DELETE("/users/:username", server.deleteUser)
+	server.setUpRouter()
 
-	server.router = router
-	return server
+	return server, nil
 
 }
 
 // Start runs the http server on a specific address
 func (server *Server) Start(addr string) error {
 	return server.router.Run(addr)
+}
+
+func (server *Server) setUpRouter() {
+	router := gin.Default()
+
+	api := router.Group("/api")
+	{
+		server.setUpUserRoutes(api)
+		server.setUpAccountRoutes(api)
+		server.setUpAuthRoutes(api)
+		server.setUpTransferRoutes(api)
+
+	}
+
+	server.router = router
 }
 
 // errorResponse will return an error response

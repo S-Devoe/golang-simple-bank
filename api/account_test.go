@@ -31,7 +31,7 @@ func TestCreateAccountAPI(t *testing.T) {
 		Times(1).
 		Return(account, nil)
 
-	server := NewServer(store)
+	server := newTestServer(t, store)
 	recorder := httptest.NewRecorder()
 
 	// Convert the request body to JSON
@@ -42,7 +42,7 @@ func TestCreateAccountAPI(t *testing.T) {
 	})
 	require.Nil(t, err)
 
-	req, err := http.NewRequest(http.MethodPost, "/accounts", bytes.NewBuffer(body))
+	req, err := http.NewRequest(http.MethodPost, "/api/accounts", bytes.NewBuffer(body))
 	require.Nil(t, err)
 
 	server.router.ServeHTTP(recorder, req)
@@ -71,10 +71,10 @@ func TestListAccountsAPI(t *testing.T) {
 		Times(1).
 		Return(int64(len(accounts)), nil)
 
-	server := NewServer(store)
+	server := newTestServer(t, store)
 	recorder := httptest.NewRecorder()
 
-	req, err := http.NewRequest(http.MethodGet, "/accounts", nil)
+	req, err := http.NewRequest(http.MethodGet, "/api/accounts", nil)
 
 	require.Nil(t, err)
 	server.router.ServeHTTP(recorder, req)
@@ -153,10 +153,10 @@ func TestGetAccountAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store)
 
-			server := NewServer(store)
+			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/accounts/%d", tc.accountID)
+			url := fmt.Sprintf("/api/accounts/%d", tc.accountID)
 			request, err := http.NewRequest(http.MethodGet, url, nil)
 			require.NoError(t, err)
 
