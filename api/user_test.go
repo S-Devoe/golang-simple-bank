@@ -232,7 +232,7 @@ func TestCreateUserAPI(t *testing.T) {
 			require.NoError(t, err)
 
 			server.router.ServeHTTP(recorder, request)
-			fmt.Printf("Response Body: %s\n", recorder.Body.String()) //added for debugging
+			// fmt.Printf("Response Body: %s\n", recorder.Body.String()) //added for debugging
 			tc.checkResponse(recorder)
 		})
 	}
