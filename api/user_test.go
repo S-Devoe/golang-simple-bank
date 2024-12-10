@@ -14,6 +14,7 @@ import (
 
 	mockdb "github.com/S-Devoe/golang-simple-bank/db/mock"
 	db "github.com/S-Devoe/golang-simple-bank/db/sqlc"
+	"github.com/S-Devoe/golang-simple-bank/token"
 	"github.com/S-Devoe/golang-simple-bank/util"
 	"github.com/S-Devoe/golang-simple-bank/util/password"
 	"github.com/gin-gonic/gin"
@@ -29,12 +30,17 @@ func TestGetUserAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		username      string
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(recorder *httptest.ResponseRecorder)
 	}{
 		{
 			name:     "OK",
 			username: user.Username,
+			setupAuth: func(t *testing.T, req *http.Request, tokenMaker token.Maker) {
+				// user just have to be logged in before they can get an account
+				addAuthorization(t, req, tokenMaker, authorizationTypeBearer, user.Username, user.Email, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().GetUser(gomock.Any(), gomock.Any()).Times(1).Return(user, nil)
 			},
@@ -46,6 +52,9 @@ func TestGetUserAPI(t *testing.T) {
 		{
 			name:     "USER_NOT_FOUND",
 			username: "randomusername",
+			setupAuth: func(t *testing.T, req *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, req, tokenMaker, authorizationTypeBearer, user.Username, user.Email, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().GetUser(gomock.Any(), gomock.Any()).Times(1).Return(db.User{}, sql.ErrNoRows)
 			},
@@ -56,6 +65,9 @@ func TestGetUserAPI(t *testing.T) {
 		{
 			name:     "INTERNAL_ERROR",
 			username: user.Username,
+			setupAuth: func(t *testing.T, req *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, req, tokenMaker, authorizationTypeBearer, user.Username, user.Email, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().GetUser(gomock.Any(), gomock.Any()).Times(1).Return(user, sql.ErrConnDone)
 			},
@@ -81,6 +93,7 @@ func TestGetUserAPI(t *testing.T) {
 			request, err := http.NewRequest(http.MethodGet, url, nil)
 			require.NoError(t, err)
 
+			tc.setupAuth(t, request, server.tokenMaker)
 			server.router.ServeHTTP(recorder, request)
 			// fmt.Printf("Response Body: %s\n", recorder.Body.String()) //added for debugging
 			tc.checkResponse(recorder)

@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	db "github.com/S-Devoe/golang-simple-bank/db/sqlc"
+	"github.com/S-Devoe/golang-simple-bank/token"
 	"github.com/S-Devoe/golang-simple-bank/util"
 	"github.com/gin-gonic/gin"
 )
@@ -27,11 +28,18 @@ func (server *Server) createTransfer(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, util.CreateResponse(http.StatusBadRequest, nil, err))
 		return
 	}
-
-	if !server.validAccount(ctx, req.FromAccountId, req.Currency) {
+	fromAccount, valid := server.validAccount(ctx, req.FromAccountId, req.Currency)
+	if !valid {
 		return
 	}
-	if !server.validAccount(ctx, req.ToAccountId, req.Currency) {
+
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	if fromAccount.Owner != authPayload.Username {
+		ctx.JSON(http.StatusUnauthorized, util.CreateResponse(http.StatusUnauthorized, nil, "Account doesn not belong to this authenticated user"))
+		return
+	}
+	_, valid = server.validAccount(ctx, req.ToAccountId, req.Currency)
+	if !valid {
 		return
 	}
 
@@ -59,20 +67,20 @@ func (server *Server) createTransfer(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, util.CreateResponse(http.StatusCreated, res, nil))
 }
 
-func (server *Server) validAccount(ctx *gin.Context, accountID int64, currency string) bool {
+func (server *Server) validAccount(ctx *gin.Context, accountID int64, currency string) (db.Account, bool) {
 	account, err := server.store.GetAccount(ctx, accountID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, util.CreateResponse(http.StatusNotFound, nil, "Account not found"))
-			return false
+			return account, false
 		}
 		ctx.JSON(http.StatusInternalServerError, util.CreateResponse(http.StatusInternalServerError, nil, err))
-		return false
+		return account, false
 	}
 
 	if account.Currency != currency {
 		ctx.JSON(http.StatusBadRequest, util.CreateResponse(http.StatusBadRequest, nil, "Invalid currency for the account"))
-		return false
+		return account, false
 	}
-	return true
+	return account, true
 }

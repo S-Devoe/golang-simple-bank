@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	db "github.com/S-Devoe/golang-simple-bank/db/sqlc"
+	"github.com/S-Devoe/golang-simple-bank/token"
 	"github.com/S-Devoe/golang-simple-bank/util"
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
@@ -13,7 +14,6 @@ import (
 
 // create account
 type createAccountRequest struct {
-	Owner    string `json:"owner" binding:"required"`
 	Currency string `json:"currency" binding:"required,currency"`
 }
 
@@ -24,8 +24,9 @@ func (server *Server) createAccount(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, util.CreateResponse(http.StatusBadRequest, nil, err))
 		return
 	}
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 	arg := db.CreateAccountParams{
-		Owner:    req.Owner,
+		Owner:    authPayload.Username,
 		Currency: req.Currency,
 		Balance:  0,
 	}
@@ -65,13 +66,18 @@ func (server *Server) getAccount(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, util.CreateResponse(http.StatusInternalServerError, nil, err))
 		return
 	}
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	if account.Owner != authPayload.Username {
+		ctx.JSON(http.StatusUnauthorized, util.CreateResponse(http.StatusUnauthorized, nil, "Account doesn't belong to this authenticated user"))
+		return
+	}
 	ctx.JSON(http.StatusOK, util.CreateResponse(http.StatusOK, account, nil))
 }
 
 // get accounts
 type listAccountsRequest struct {
-	Limit  int32 `query:"limit"`
-	Offset int32 `query:"offset"`
+	Limit int32 `query:"limit"`
+	Page  int32 `query:"page"`
 }
 
 func (server *Server) listAccounts(ctx *gin.Context) {
@@ -87,9 +93,11 @@ func (server *Server) listAccounts(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, util.CreateResponse(http.StatusBadRequest, nil, err))
 		return
 	}
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 	arg := db.ListAccountsParams{
 		Limit:  pagination.Limit,
 		Offset: pagination.Offset,
+		Owner:  authPayload.Username,
 	}
 
 	accounts, err := server.store.ListAccounts(ctx, arg)

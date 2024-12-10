@@ -9,9 +9,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	mockdb "github.com/S-Devoe/golang-simple-bank/db/mock"
 	db "github.com/S-Devoe/golang-simple-bank/db/sqlc"
+	"github.com/S-Devoe/golang-simple-bank/token"
 	"github.com/S-Devoe/golang-simple-bank/util"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -19,7 +21,8 @@ import (
 
 func TestCreateAccountAPI(t *testing.T) {
 	// Mock data
-	account := randomAccount()
+	user := randomUser()
+	account := randomAccount(user.Username)
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -45,6 +48,7 @@ func TestCreateAccountAPI(t *testing.T) {
 	req, err := http.NewRequest(http.MethodPost, "/api/accounts", bytes.NewBuffer(body))
 	require.Nil(t, err)
 
+	addAuthorization(t, req, server.tokenMaker, authorizationTypeBearer, user.Username, user.Email, time.Minute)
 	server.router.ServeHTTP(recorder, req)
 	require.Equal(t, http.StatusCreated, recorder.Code)
 
@@ -75,8 +79,9 @@ func TestListAccountsAPI(t *testing.T) {
 	recorder := httptest.NewRecorder()
 
 	req, err := http.NewRequest(http.MethodGet, "/api/accounts", nil)
-
 	require.Nil(t, err)
+
+	addAuthorization(t, req, server.tokenMaker, authorizationTypeBearer, "user", "devoe", time.Minute)
 	server.router.ServeHTTP(recorder, req)
 	require.Equal(t, http.StatusOK, recorder.Code)
 
@@ -85,16 +90,21 @@ func TestListAccountsAPI(t *testing.T) {
 }
 
 func TestGetAccountAPI(t *testing.T) {
-	account := randomAccount()
+	user := randomUser()
+	account := randomAccount(user.Username)
 	testCases := []struct {
 		name          string
 		accountID     int64
 		buildStubs    func(store *mockdb.MockStore)
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
 			name:      "OK",
 			accountID: account.ID,
+			setupAuth: func(t *testing.T, req *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, req, tokenMaker, authorizationTypeBearer, user.Username, user.Email, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account.ID)).Times(1).Return(account, nil)
 			},
@@ -106,6 +116,9 @@ func TestGetAccountAPI(t *testing.T) {
 		{
 			name:      "NOTFOUND",
 			accountID: account.ID,
+			setupAuth: func(t *testing.T, req *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, req, tokenMaker, authorizationTypeBearer, user.Username, user.Email, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account.ID)).Times(1).Return(db.Account{}, sql.ErrNoRows)
 			},
@@ -117,6 +130,9 @@ func TestGetAccountAPI(t *testing.T) {
 		{
 			name:      "INTERNALERROR",
 			accountID: account.ID,
+			setupAuth: func(t *testing.T, req *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, req, tokenMaker, authorizationTypeBearer, user.Username, user.Email, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					GetAccount(gomock.
@@ -132,6 +148,9 @@ func TestGetAccountAPI(t *testing.T) {
 		{
 			name:      "InvalidID",
 			accountID: 0,
+			setupAuth: func(t *testing.T, req *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, req, tokenMaker, authorizationTypeBearer, user.Username, user.Email, time.Minute)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					GetAccount(gomock.Any(), gomock.Any()).
@@ -160,6 +179,7 @@ func TestGetAccountAPI(t *testing.T) {
 			request, err := http.NewRequest(http.MethodGet, url, nil)
 			require.NoError(t, err)
 
+			tc.setupAuth(t, request, server.tokenMaker)
 			server.router.ServeHTTP(recorder, request)
 			// fmt.Printf("Response Body: %s\n", recorder.Body.String()), added for debugging
 			tc.checkResponse(t, recorder)
@@ -178,11 +198,11 @@ func randomUser() db.User {
 	}
 }
 
-func randomAccount() db.Account {
-	user := randomUser()
+func randomAccount(owner string) db.Account {
+
 	return db.Account{
 		ID:       util.GenerateRandomInt(1, 100),
-		Owner:    user.Username,
+		Owner:    owner,
 		Balance:  float64(util.GenerateRandomInt(0, 100)),
 		Currency: util.GenerateRandomCurrency(),
 	}
