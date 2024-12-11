@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 
 	"github.com/S-Devoe/golang-simple-bank/util"
@@ -17,7 +16,7 @@ func createRandomUser(t *testing.T) User {
 		Email:          util.GenerateRandomEmail(),
 	}
 
-	user, err := testQueries.CreateUser(context.Background(), arg)
+	user, err := testStore.CreateUser(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, user)
@@ -40,7 +39,7 @@ func createRandomAccount(t *testing.T) Account {
 		Currency: util.GenerateRandomCurrency(),
 	}
 
-	account, err := testQueries.CreateAccount(context.Background(), arg)
+	account, err := testStore.CreateAccount(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, account)
@@ -62,7 +61,7 @@ func TestCreateAccount(t *testing.T) {
 		Currency: util.GenerateRandomCurrency(),
 	}
 
-	account, err := testQueries.CreateAccount(context.Background(), arg)
+	account, err := testStore.CreateAccount(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, account)
@@ -83,10 +82,10 @@ func TestGetAccount(t *testing.T) {
 		Currency: util.GenerateRandomCurrency(),
 	}
 
-	account1, err := testQueries.CreateAccount(context.Background(), createArg)
+	account1, err := testStore.CreateAccount(context.Background(), createArg)
 	require.NoError(t, err)
 
-	account2, err := testQueries.GetAccount(context.Background(), account1.ID)
+	account2, err := testStore.GetAccount(context.Background(), account1.ID)
 	require.NoError(t, err)
 
 	require.Equal(t, account1.ID, account2.ID)
@@ -104,7 +103,7 @@ func TestUpdateAccount(t *testing.T) {
 		Balance: util.RandomMoney(),
 	}
 
-	account, err := testQueries.UpdateAccount(context.Background(), arg)
+	account, err := testStore.UpdateAccount(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, account)
 	require.Equal(t, account1.ID, account.ID)
@@ -117,12 +116,12 @@ func TestUpdateAccount(t *testing.T) {
 func TestDeleteAccount(t *testing.T) {
 	account := createRandomAccount(t)
 
-	err := testQueries.DeleteAccount(context.Background(), account.ID)
+	err := testStore.DeleteAccount(context.Background(), account.ID)
 	require.NoError(t, err)
 
-	acct, err := testQueries.GetAccount(context.Background(), account.ID)
+	acct, err := testStore.GetAccount(context.Background(), account.ID)
 	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
+	require.EqualError(t, err, ErrRecordNotFound.Error())
 	require.NotEqual(t, account.ID, acct.ID)
 	require.Empty(t, acct)
 
@@ -140,7 +139,7 @@ func TestListAccounts(t *testing.T) {
 		Offset: 0,
 	}
 
-	accounts, err := testQueries.ListAccounts(context.Background(), arg)
+	accounts, err := testStore.ListAccounts(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, accounts)
 

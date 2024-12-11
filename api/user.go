@@ -1,7 +1,6 @@
 package api
 
 import (
-	"database/sql"
 	"net/http"
 	"time"
 
@@ -9,7 +8,6 @@ import (
 	"github.com/S-Devoe/golang-simple-bank/util"
 	"github.com/S-Devoe/golang-simple-bank/util/password"
 	"github.com/gin-gonic/gin"
-	"github.com/lib/pq"
 )
 
 type createUserRequest struct {
@@ -60,13 +58,9 @@ func (s *Server) createUser(ctx *gin.Context) {
 
 	user, err := s.store.CreateUser(ctx, arg)
 	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			switch pqErr.Code.Name() {
-			case "unique_violation":
-				ctx.JSON(http.StatusForbidden, util.CreateResponse(http.StatusForbidden, nil, "Username or Email already exists"))
-				return
-			}
-
+		if db.ErrorCode(err) == db.UniqueViolation {
+			ctx.JSON(http.StatusForbidden, util.CreateResponse(http.StatusForbidden, nil, "Username or Email already exists"))
+			return
 		}
 		ctx.JSON(http.StatusInternalServerError, util.CreateResponse(http.StatusInternalServerError, nil, err))
 		return
@@ -89,7 +83,7 @@ func (s *Server) getUser(ctx *gin.Context) {
 
 	user, err := s.store.GetUser(ctx, req.Username)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == db.ErrRecordNotFound {
 			ctx.JSON(http.StatusNotFound, util.CreateResponse(http.StatusNotFound, nil, "User not found"))
 			return
 		}
@@ -114,7 +108,7 @@ func (s *Server) deleteUser(ctx *gin.Context) {
 	// First, check if the user exists
 	_, err := s.store.GetUser(ctx, req.Username)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == db.ErrRecordNotFound {
 			ctx.JSON(http.StatusNotFound, util.CreateResponse(http.StatusNotFound, nil, "User not found"))
 			return
 		}

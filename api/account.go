@@ -1,15 +1,12 @@
 package api
 
 import (
-	"database/sql"
-	"log"
 	"net/http"
 
 	db "github.com/S-Devoe/golang-simple-bank/db/sqlc"
 	"github.com/S-Devoe/golang-simple-bank/token"
 	"github.com/S-Devoe/golang-simple-bank/util"
 	"github.com/gin-gonic/gin"
-	"github.com/lib/pq"
 )
 
 // create account
@@ -32,14 +29,11 @@ func (server *Server) createAccount(ctx *gin.Context) {
 	}
 	account, err := server.store.CreateAccount(ctx, arg)
 	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			log.Println(pqErr.Code.Name())
-			switch pqErr.Code.Name() {
-			case "foreign_key_violation", "unique_violation":
-				ctx.JSON(http.StatusForbidden, util.CreateResponse(http.StatusForbidden, nil, err))
-				return
-			}
+		if db.ErrorCode(err) == db.UniqueViolation {
+			ctx.JSON(http.StatusForbidden, util.CreateResponse(http.StatusForbidden, nil, err))
+			return
 		}
+
 		ctx.JSON(http.StatusInternalServerError, util.CreateResponse(http.StatusInternalServerError, nil, err))
 		return
 	}
@@ -59,7 +53,7 @@ func (server *Server) getAccount(ctx *gin.Context) {
 	}
 	account, err := server.store.GetAccount(ctx, req.ID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == db.ErrRecordNotFound {
 			ctx.JSON(http.StatusNotFound, util.CreateResponse(http.StatusNotFound, nil, "Account not found"))
 			return
 		}

@@ -16,7 +16,7 @@ func TestCreateEntry(t *testing.T) {
 		Amount:    100.0,
 	}
 
-	entry, err := testQueries.CreateEntry(context.Background(), arg)
+	entry, err := testStore.CreateEntry(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, entry)
@@ -29,7 +29,7 @@ func TestCreateEntry(t *testing.T) {
 }
 func TestGetAllEntries(t *testing.T) {
 
-	entries, err := testQueries.ListEntries(context.Background())
+	entries, err := testStore.ListEntries(context.Background())
 	require.NoError(t, err)
 	require.Greater(t, len(entries), 0)
 
@@ -44,10 +44,10 @@ func TestGetEntry(t *testing.T) {
 		Amount:    100.0,
 	}
 
-	entry, err := testQueries.CreateEntry(context.Background(), arg)
+	entry, err := testStore.CreateEntry(context.Background(), arg)
 	require.NoError(t, err)
 
-	entryGot, err := testQueries.GetEntry(context.Background(), entry.ID)
+	entryGot, err := testStore.GetEntry(context.Background(), entry.ID)
 	require.NoError(t, err)
 	require.Equal(t, entryGot.ID, entry.ID)
 	require.Equal(t, entryGot.AccountID, entry.AccountID)

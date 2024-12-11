@@ -9,7 +9,7 @@ import (
 	db "github.com/S-Devoe/golang-simple-bank/db/sqlc"
 	"github.com/S-Devoe/golang-simple-bank/util"
 	"github.com/gin-gonic/gin"
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 

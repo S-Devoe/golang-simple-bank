@@ -1,13 +1,15 @@
 package main
 
 import (
-	"database/sql"
+	"context"
+	"fmt"
 	"log"
 
 	"github.com/S-Devoe/golang-simple-bank/api"
 	"github.com/S-Devoe/golang-simple-bank/config"
 	db "github.com/S-Devoe/golang-simple-bank/db/sqlc"
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 const (
@@ -18,7 +20,8 @@ const (
 
 func main() {
 	config := config.InitConfig()
-	connection, err := sql.Open(dbDriver, dbSource)
+	fmt.Println(config.RefreshTokenDuration)
+	connection, err := pgxpool.New(context.Background(), dbSource)
 	if err != nil {
 		log.Fatal("cannot connect to db: ", err)
 	}

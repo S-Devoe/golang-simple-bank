@@ -20,6 +20,9 @@ migratedown1:
 migrateup1:
 	migrate -path db/migration -database "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose up 1
 
+new_migration:
+	migrate create -ext sql -dir db/migration -seq $(name)
+
 sqlc:
 	sqlc generate
 
@@ -32,4 +35,4 @@ server:
 mock:
 	mockgen -package mockdb -destination db/mock/store.go github.com/S-Devoe/golang-simple-bank/db/sqlc Store
 
-.PHONY: createdb dropdb postgres migrateup migratedown sqlc test server migratedown1 migrateup1 mock
+.PHONY: createdb dropdb postgres migrateup migratedown sqlc test server migratedown1 migrateup1 mock new_migration

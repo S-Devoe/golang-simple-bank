@@ -1,9 +1,9 @@
 package api
 
 import (
-	"database/sql"
 	"net/http"
 
+	db "github.com/S-Devoe/golang-simple-bank/db/sqlc"
 	"github.com/S-Devoe/golang-simple-bank/util"
 	"github.com/S-Devoe/golang-simple-bank/util/password"
 	"github.com/gin-gonic/gin"
@@ -29,7 +29,7 @@ func (s *Server) loginUser(ctx *gin.Context) {
 
 	user, err := s.store.GetUser(ctx, req.Username)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == db.ErrRecordNotFound {
 			ctx.JSON(http.StatusNotFound, util.CreateResponse(http.StatusNotFound, nil, "User not found"))
 			return
 		}

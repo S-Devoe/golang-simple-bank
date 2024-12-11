@@ -19,7 +19,7 @@ func TestCreateTransfer(t *testing.T) {
 		Amount:        10,
 	}
 
-	transfer, err := testQueries.CreateTransfer(context.Background(), arg)
+	transfer, err := testStore.CreateTransfer(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.Equal(t, transfer.FromAccountID, account1.ID)
@@ -37,10 +37,10 @@ func TestListTransfers(t *testing.T) {
 		Amount:        10,
 	}
 
-	_, err := testQueries.CreateTransfer(context.Background(), arg)
+	_, err := testStore.CreateTransfer(context.Background(), arg)
 	require.NoError(t, err)
 
-	transfers, err := testQueries.ListTransfers(context.Background())
+	transfers, err := testStore.ListTransfers(context.Background())
 	require.NoError(t, err)
 	require.Equal(t, transfers[0].FromAccountID, account1.ID)
 	require.Greater(t, len(transfers), 0)
@@ -56,10 +56,10 @@ func TestGetTransfer(t *testing.T) {
 		Amount:        10,
 	}
 
-	transfer, err := testQueries.CreateTransfer(context.Background(), arg)
+	transfer, err := testStore.CreateTransfer(context.Background(), arg)
 	require.NoError(t, err)
 
-	transferGot, err := testQueries.GetTransfer(context.Background(), transfer.ID)
+	transferGot, err := testStore.GetTransfer(context.Background(), transfer.ID)
 	require.NoError(t, err)
 	require.Equal(t, transferGot.ID, transfer.ID)
 	require.Equal(t, transferGot.FromAccountID, transfer.FromAccountID)

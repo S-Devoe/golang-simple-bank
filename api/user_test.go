@@ -18,7 +18,6 @@ import (
 	"github.com/S-Devoe/golang-simple-bank/util"
 	"github.com/S-Devoe/golang-simple-bank/util/password"
 	"github.com/gin-gonic/gin"
-	"github.com/lib/pq"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -56,7 +55,7 @@ func TestGetUserAPI(t *testing.T) {
 				addAuthorization(t, req, tokenMaker, authorizationTypeBearer, user.Username, user.Email, time.Minute)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().GetUser(gomock.Any(), gomock.Any()).Times(1).Return(db.User{}, sql.ErrNoRows)
+				store.EXPECT().GetUser(gomock.Any(), gomock.Any()).Times(1).Return(db.User{}, db.ErrRecordNotFound)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
@@ -186,7 +185,7 @@ func TestCreateUserAPI(t *testing.T) {
 					CreateUser(gomock.
 						Any(), gomock.Any()).
 					Times(1).
-					Return(db.User{}, &pq.Error{Code: "23505"})
+					Return(db.User{}, db.ErrUniqueViolation)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusForbidden, recorder.Code)

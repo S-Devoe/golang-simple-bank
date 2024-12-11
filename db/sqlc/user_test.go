@@ -21,7 +21,7 @@ func TestCreateUser(t *testing.T) {
 		Email:          util.GenerateRandomEmail(),
 	}
 
-	user, err := testQueries.CreateUser(context.Background(), arg)
+	user, err := testStore.CreateUser(context.Background(), arg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, user)
