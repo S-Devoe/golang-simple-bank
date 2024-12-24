@@ -48,7 +48,6 @@ func TestAuthMiddleware(t *testing.T) {
 		{
 			name: "NoAuthorizaton",
 			setupAuth: func(t *testing.T, req *http.Request, tokenMaker token.Maker) {
-
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusUnauthorized, recorder.Code)
@@ -89,7 +88,7 @@ func TestAuthMiddleware(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			server := newTestServer(t, nil)
 
-			authPath := "/api/auth"
+			authPath := "/api/v1/auth"
 			server.router.GET(
 				authPath,
 				authMiddleware(server.tokenMaker),

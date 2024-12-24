@@ -45,7 +45,7 @@ func TestCreateAccountAPI(t *testing.T) {
 	})
 	require.Nil(t, err)
 
-	req, err := http.NewRequest(http.MethodPost, "/api/accounts", bytes.NewBuffer(body))
+	req, err := http.NewRequest(http.MethodPost, "/api/v1/accounts", bytes.NewBuffer(body))
 	require.Nil(t, err)
 
 	addAuthorization(t, req, server.tokenMaker, authorizationTypeBearer, user.Username, user.Email, time.Minute)
@@ -78,7 +78,7 @@ func TestListAccountsAPI(t *testing.T) {
 	server := newTestServer(t, store)
 	recorder := httptest.NewRecorder()
 
-	req, err := http.NewRequest(http.MethodGet, "/api/accounts", nil)
+	req, err := http.NewRequest(http.MethodGet, "/api/v1/accounts", nil)
 	require.Nil(t, err)
 
 	addAuthorization(t, req, server.tokenMaker, authorizationTypeBearer, "user", "devoe", time.Minute)
@@ -175,7 +175,7 @@ func TestGetAccountAPI(t *testing.T) {
 			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
-			url := fmt.Sprintf("/api/accounts/%d", tc.accountID)
+			url := fmt.Sprintf("/api/v1/accounts/%d", tc.accountID)
 			request, err := http.NewRequest(http.MethodGet, url, nil)
 			require.NoError(t, err)
 
