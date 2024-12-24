@@ -17,6 +17,8 @@ type Config struct {
 	TokenSymmetricKey    string
 	AccessTokenDuration  time.Duration
 	RefreshTokenDuration time.Duration
+	HttpServerAddress    string
+	GrpcServerAddress    string
 }
 
 func getEnv(key, fallback string) string {
@@ -51,6 +53,8 @@ func InitConfig() Config {
 		TokenSymmetricKey:    getEnv("TOKEN_SYMMETRIC_KEY", ""),
 		AccessTokenDuration:  duration,
 		RefreshTokenDuration: refresh_token_duration,
+		HttpServerAddress:    getEnv("HTTP_SERVER_ADDRESS", ""),
+		GrpcServerAddress:    getEnv("GRPC_SERVER_ADDRESS", ""),
 	}
 }
 

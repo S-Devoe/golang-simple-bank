@@ -8,5 +8,6 @@ func (server *Server) setUpAuthRoutes(router *gin.RouterGroup) {
 		// auth
 		authGroup.POST("/login", server.loginUser)
 		authGroup.POST("/signup", server.createUser)
+		authGroup.POST("/token/renew", server.renewAccessToken)
 	}
 }

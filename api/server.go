@@ -5,10 +5,13 @@ import (
 
 	"github.com/S-Devoe/golang-simple-bank/config"
 	db "github.com/S-Devoe/golang-simple-bank/db/sqlc"
+	_ "github.com/S-Devoe/golang-simple-bank/docs"
 	"github.com/S-Devoe/golang-simple-bank/token"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // server struct will serve all requests for the banking service
@@ -47,8 +50,16 @@ func (server *Server) Start(addr string) error {
 
 func (server *Server) setUpRouter() {
 	router := gin.Default()
+	//add swagger
+	router.GET("/docs/*any", func(c *gin.Context) {
+		if c.Request.RequestURI == "/docs/" {
+			c.Redirect(302, "/docs/index.html")
+			return
+		}
+	},
+		ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	api := router.Group("/api")
+	api := router.Group("/api/v1")
 	{
 		server.setUpUserRoutes(api)
 		server.setUpAccountRoutes(api)

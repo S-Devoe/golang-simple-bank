@@ -21,8 +21,10 @@ func addAuthorization(
 	email string,
 	duration time.Duration,
 ) {
-	token, err := tokenMaker.CreateToken(username, email, duration)
+	token, payload, err := tokenMaker.CreateToken(username, email, duration)
 	require.NoError(t, err)
+	require.NotEmpty(t, token)
+	require.NotEmpty(t, payload)
 
 	authorizationHeader := fmt.Sprintf("%s %s", authorizationType, token)
 	req.Header.Set(authorizationHeaderKey, authorizationHeader)

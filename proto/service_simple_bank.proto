@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package pb;
+
+import "rpc_user.proto";
+import "rpc_auth.proto";
+
+option go_package ="github.com/S-Devoe/golang-simple-bank/pb";
+
+service SimpleBank{
+    rpc CreateUser (CreateUserRequest) returns (CreateUserResponse) {
+
+    }
+    rpc LoginUser (LoginRequest) returns (LoginResponse) {
+        
+    }
+}

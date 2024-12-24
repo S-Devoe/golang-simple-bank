@@ -18,24 +18,36 @@ type createUserRequest struct {
 }
 
 type userResponse struct {
-	Username        string    `json:"username"`
-	FullName        string    `json:"full_name"`
-	Email           string    `json:"email"`
-	CreatedAt       time.Time `json:"created_at"`
-	PasswordChanged time.Time `json:"password_changed_at,omitempty"` // Omit if empty
+	Username          string    `json:"username"`
+	FullName          string    `json:"full_name"`
+	Email             string    `json:"email"`
+	CreatedAt         time.Time `json:"created_at"`
+	PasswordChangedAt time.Time `json:"password_changed_at,omitempty"` // Omit if empty
 
 }
 
 func newUserResponse(user db.User) userResponse {
 	return userResponse{
-		Username:        user.Username,
-		FullName:        user.FullName,
-		Email:           user.Email,
-		CreatedAt:       user.CreatedAt,
-		PasswordChanged: user.PasswordChangedAt,
+		Username:          user.Username,
+		FullName:          user.FullName,
+		Email:             user.Email,
+		CreatedAt:         user.CreatedAt,
+		PasswordChangedAt: user.PasswordChangedAt,
 	}
 }
 
+// CreateUser godoc
+// @Summary Create User
+// @Description Create a new user
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param loginRequest body createUserRequest true "Create User Request"
+// @Success 200 {object} util.Response{data=userResponse} "Success"
+// @Failure 400 {object} util.Response "Bad Request"
+// @Failure 403 {object} util.Response "Forbidden"
+// @Failure 500 {object} util.Response "Internal Server Error"
+// @Router /signup [post]
 func (s *Server) createUser(ctx *gin.Context) {
 	var req createUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {

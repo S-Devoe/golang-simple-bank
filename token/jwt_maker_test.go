@@ -23,11 +23,12 @@ func TestJWTMaker(t *testing.T) {
 	issuedAt := time.Now()
 	expiredAt := issuedAt.Add(duration)
 
-	token, err := maker.CreateToken(username, email, duration)
+	token, payload, err := maker.CreateToken(username, email, duration)
 	require.NoError(t, err)
 	require.NotEmpty(t, token)
+	require.NotEmpty(t, payload)
 
-	payload, err := maker.VerifyToken(token)
+	payload, err = maker.VerifyToken(token)
 	require.NoError(t, err)
 	require.NotNil(t, payload)
 
@@ -43,11 +44,12 @@ func TestExpiredToken(t *testing.T) {
 	maker, err := NewJWTMaker(secret)
 	require.NoError(t, err)
 
-	token, err := maker.CreateToken(util.GenerateRandomUserName(), util.GenerateRandomEmail(), -time.Second)
+	token, payload, err := maker.CreateToken(util.GenerateRandomUserName(), util.GenerateRandomEmail(), -time.Second)
 	require.NoError(t, err)
 	require.NotEmpty(t, token)
+	require.NotEmpty(t, payload)
 
-	payload, err := maker.VerifyToken(token)
+	payload, err = maker.VerifyToken(token)
 	require.Error(t, err)
 	require.EqualError(t, err, ErrExpiredToken.Error())
 	require.Nil(t, payload)
@@ -68,9 +70,10 @@ func TestInvalidAlgorithm(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create a valid token
-	token, err := maker.CreateToken(util.GenerateRandomUserName(), util.GenerateRandomEmail(), time.Minute)
+	token, payload, err := maker.CreateToken(util.GenerateRandomUserName(), util.GenerateRandomEmail(), time.Minute)
 	require.NoError(t, err)
 	require.NotEmpty(t, token)
+	require.NotEmpty(t, payload)
 
 	// Tamper with the token to use an invalid algorithm
 	parts := strings.Split(token, ".")
@@ -82,7 +85,7 @@ func TestInvalidAlgorithm(t *testing.T) {
 	invalidToken := strings.Join(parts, ".")
 
 	// Verify the tampered token
-	payload, err := maker.VerifyToken(invalidToken)
+	payload, err = maker.VerifyToken(invalidToken)
 	require.Error(t, err)
 	require.EqualError(t, err, ErrInvalidToken.Error())
 	require.Nil(t, payload)

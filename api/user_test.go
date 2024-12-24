@@ -286,7 +286,7 @@ func requireCreateUserBodyMatch(t *testing.T, body *bytes.Buffer, user db.User) 
 
 	// Validate timestamps within an acceptable range
 	require.WithinDuration(t, user.CreatedAt, response.Data.CreatedAt, time.Second)
-	require.WithinDuration(t, user.PasswordChangedAt, response.Data.PasswordChanged, time.Second)
+	require.WithinDuration(t, user.PasswordChangedAt, response.Data.PasswordChangedAt, time.Second)
 
 }
 func requireGetUserBodyMatch(t *testing.T, body *bytes.Buffer, user db.User) {
@@ -310,6 +310,6 @@ func requireGetUserBodyMatch(t *testing.T, body *bytes.Buffer, user db.User) {
 
 	// Validate timestamps within an acceptable range
 	require.WithinDuration(t, user.CreatedAt, response.Data.CreatedAt, time.Second)
-	require.WithinDuration(t, user.PasswordChangedAt, response.Data.PasswordChanged, time.Second)
+	require.WithinDuration(t, user.PasswordChangedAt, response.Data.PasswordChangedAt, time.Second)
 
 }
